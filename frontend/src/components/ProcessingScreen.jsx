@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Siren } from 'lucide-react';
 
 function ProcessingScreen({ sessionId, initialBufferSize, onReset }) {
   const [currentFrameData, setCurrentFrameData] = useState(null); // For base64 image string
@@ -145,7 +146,7 @@ function ProcessingScreen({ sessionId, initialBufferSize, onReset }) {
                 className="w-full h-full object-contain" // 'object-contain' to see whole frame
             />
           ) : (
-            <div className="text-gray-400 p-4 text-center">
+            <div className="text-gray-700 p-4 text-center">
                 { sessionId ? "Initializing video stream..." : "Upload a video to start."}
             </div>
           )}
@@ -153,21 +154,24 @@ function ProcessingScreen({ sessionId, initialBufferSize, onReset }) {
 
         {/* Detection Part */}
         <div className={`flex flex-col justify-center items-center p-6 bg-gray-800 rounded-lg shadow-xl border-2 ${getBoxColor(confidenceValue)}`}>
-          <h2 className="text-xl font-semibold text-gray-300 mb-2">Current Detection</h2>
+          <h2 className="text-xl font-semibold text-grey-300 mb-2">Current Detection</h2>
           <p className="text-4xl font-bold text-teal-400 mb-1 truncate max-w-full px-2" title={detection.className}>
-            {detection.className}
+            {
+              confidenceValue >= 75 ? (<><Siren /> {detection.className}</>) :
+              confidenceValue < 40 ? "Neutral (No threat detected)" : detection.className
+            }
           </p>
-          <p className="text-lg text-gray-400 mb-4">
+          <p className="text-lg text-gray-800 mb-4">
             Confidence: {confidenceValue.toFixed(2)}%
           </p>
-          <div className="w-full bg-gray-700 rounded-full h-6 mb-1 overflow-hidden">
+          <div className="w-full bg-gray-800 rounded-full h-6 mb-1 overflow-hidden">
             <div
               className={`h-6 rounded-full transition-all duration-300 ease-out 
                           ${confidenceValue > 90 ? 'bg-red-500' : confidenceValue > 60 ? 'bg-yellow-500' : 'bg-teal-500'}`}
               style={{ width: `${Math.max(0, Math.min(100, confidenceValue))}%` }}
             ></div>
           </div>
-           <div className="text-xs text-gray-500 mt-3 space-y-1">
+           <div className="text-xs text-black mt-3 space-y-1">
              <p><span className="inline-block w-3 h-3 bg-green-500 mr-1 rounded-sm"></span> Normal / Low (&lt;=60%)</p>
              <p><span className="inline-block w-3 h-3 bg-yellow-500 mr-1 rounded-sm"></span> Medium (&gt;60%)</p>
              <p><span className="inline-block w-3 h-3 bg-red-500 mr-1 rounded-sm"></span> High (&gt;90%)</p>
