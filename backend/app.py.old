@@ -1,0 +1,179 @@
+from flask import Flask, request, jsonify, send_from_directory, Response
+from flask_cors import CORS
+import os
+import cv2
+import time
+import json
+from collections import deque
+from model_loader import preprocess_frame, predict_from_buffer # Import new functions
+
+# Configuration
+UPLOAD_FOLDER = 'uploads'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+CORS(app) # Enable CORS for all routes
+
+# Store video metadata (could be a simple dictionary or a database for more complex apps)
+video_sessions = {} 
+
+@app.route('/upload', methods=['POST'])
+def upload_video():
+    if 'video' not in request.files:
+        return jsonify({"error": "No video file part"}), 400
+    file = request.files['video']
+    if file.filename == '':
+        return jsonify({"error": "No selected file"}), 400
+    if file:
+        filename = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+        file.save(filename)
+        # Generate a unique session ID for this video processing instance
+        session_id = str(time.time()).replace(".", "") # Simple session ID
+        video_sessions[session_id] = {"filepath": filename, "buffer_size": 32} # Default buffer_size
+        return jsonify({"message": "Video uploaded successfully", "filename": file.filename, "video_url": f"/uploads/{file.filename}", "session_id": session_id}), 200
+    return jsonify({"error": "File upload failed"}), 500
+
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+def generate_video_frames(video_path):
+    cap = cv2.VideoCapture(video_path)
+    if not cap.isOpened():
+        print(f"Error: Could not open video {video_path}")
+        return
+
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    delay = 1 / fps if fps > 0 else 0.03 # 30ms delay if fps is 0
+
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+        
+        # Encode frame as JPEG
+        (flag, encodedImage) = cv2.imencode(".jpg", frame)
+        if not flag:
+            continue
+        
+        # Yield the frame in byte format
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + bytearray(encodedImage) + b'\r\n')
+        time.sleep(delay) # Control streaming speed to match video FPS
+
+    cap.release()
+    print(f"Finished streaming video frames for {video_path}")
+
+@app.route('/video_feed/<session_id>')
+def video_feed(session_id):
+    if session_id not in video_sessions:
+        return "Invalid session ID", 404
+    video_path = video_sessions[session_id]['filepath']
+    if not os.path.exists(video_path):
+        return "Video file not found", 404
+    return Response(generate_video_frames(video_path),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
+def stream_detections(video_path, buffer_size_frames):
+    cap = cv2.VideoCapture(video_path)
+    if not cap.isOpened():
+        yield f"data: {json.dumps({'error': 'Could not open video'})}\n\n"
+        return
+
+    frame_buffer = deque(maxlen=buffer_size_frames)
+    frame_count = 0
+    
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    target_delay = 1.0 / fps if fps > 0 else 0.03 # seconds
+
+    print(f"Starting detection stream for {video_path} with buffer_size {buffer_size_frames}")
+
+    try:
+        while cap.isOpened():
+            loop_start_time = time.time()
+            ret, frame = cap.read()
+            if not ret:
+                print("End of video or error reading frame.")
+                break
+
+            processed_frame = preprocess_frame(frame) # Resize, color conversion
+            frame_buffer.append(processed_frame)
+            frame_count += 1
+
+            if len(frame_buffer) == buffer_size_frames:
+                print(f"Buffer full (frame {frame_count}), predicting...")
+                # We have enough frames, make a prediction
+                predicted_class, confidence = predict_from_buffer(frame_buffer)
+                
+                if predicted_class is not None:
+                    detection_data = {
+                        "class_name": predicted_class,
+                        "confidence": float(confidence) # Ensure it's float for JSON
+                    }
+                    yield f"data: {json.dumps(detection_data)}\n\n"
+                    print(f"Sent detection: {detection_data}")
+                
+                # For this mock, we can clear the buffer to get distinct predictions for subsequent segments
+                # Or implement a sliding window: frame_buffer.popleft() for every new frame
+                # For simplicity now, let's clear and refill for non-overlapping windows.
+                # Or, to make it more "live", slide the window by removing the oldest N frames
+                # Let's slide by one frame if buffer is full to simulate continuous processing.
+                # This means a new prediction every frame after buffer is initially filled.
+                # However, I3D is for clips, so non-overlapping or slightly overlapping makes more sense.
+                # For this example, let's predict on full buffers and then clear and refill for the *next* buffer.
+                # This means predictions will come in chunks of `buffer_size_frames`.
+                # To be more "live" for the demo, we could pop just one frame
+                # frame_buffer.popleft() # If we want sliding window by 1
+                # For the prompt: "once buffer_size frames are collected we give it to the model"
+                # This implies non-overlapping or processing the whole buffer then advancing.
+                # Let's make it so it processes and then waits for the next set of buffer_size frames.
+                # For a better demo, we can make it predict then SLIDE the window, e.g. by half the buffer size.
+                # For now, let's assume we process, yield, and then for the *next* call, we'll need `buffer_size` new frames.
+                # The way this loop is structured, it will process every time it *hits* buffer_size.
+                # If we want distinct chunks, we'd need to advance the video capture by buffer_size frames.
+                # Let's try this: after prediction, discard half the buffer to make it somewhat continuous.
+                for _ in range(buffer_size_frames // 2 if buffer_size_frames > 1 else 1):
+                    if frame_buffer:
+                        frame_buffer.popleft()
+            
+            # Control processing speed to roughly match video's original FPS
+            # This ensures we are not processing faster than the video plays.
+            # The actual video display is handled by /video_feed independently.
+            # This loop's speed controls how often we attempt to make a prediction.
+            elapsed_time = time.time() - loop_start_time
+            sleep_duration = target_delay - elapsed_time
+            if sleep_duration > 0:
+                time.sleep(sleep_duration)
+
+    except Exception as e:
+        print(f"Error during detection streaming: {e}")
+        yield f"data: {json.dumps({'error': str(e)})}\n\n"
+    finally:
+        cap.release()
+        print(f"Detection stream ended for {video_path}.")
+        yield f"data: {json.dumps({'status': 'finished'})}\n\n"
+
+
+@app.route('/detections/<session_id>')
+def detections(session_id):
+    if session_id not in video_sessions:
+        return "Invalid session ID", 404
+    
+    video_path = video_sessions[session_id]['filepath']
+    buffer_size = int(request.args.get('buffer_size', video_sessions[session_id].get('buffer_size', 32))) # Get from query param or session
+    video_sessions[session_id]['buffer_size'] = buffer_size # Update session if changed
+
+    if not os.path.exists(video_path):
+        return "Video file not found for detection", 404
+        
+    return Response(stream_detections(video_path, buffer_size), mimetype='text/event-stream')
+
+if __name__ == '__main__':
+    print("Starting Flask server...")
+    # For development:
+    app.run(debug=True, host='0.0.0.0', port=5001, threaded=True) 
+    # `threaded=True` is important for handling multiple requests like video stream and SSE concurrently during dev.
+    # For production, use a proper WSGI server like gunicorn:
+    # gunicorn --workers 4 --threads 4 --bind 0.0.0.0:5001 app:app

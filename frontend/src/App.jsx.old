@@ -1,0 +1,43 @@
+import React, { useState } from 'react';
+import './App.css'; // Or index.css if you put Tailwind directives there
+import UploadScreen from './components/UploadScreen';
+import ProcessingScreen from './components/ProcessingScreen';
+
+function App() {
+  const [currentView, setCurrentView] = useState('upload'); // 'upload' or 'processing'
+  const [sessionId, setSessionId] = useState(null);
+  const [currentBufferSize, setCurrentBufferSize] = useState(32);
+  const [videoSrc, setVideoSrc] = useState('');
+
+
+  const handleVideoUploaded = (newSessionId, bufferSize, videoUrl) => {
+    setSessionId(newSessionId);
+    setCurrentBufferSize(bufferSize);
+    setVideoSrc(videoUrl); // URL for the <video> tag
+    setCurrentView('processing');
+  };
+
+  const handleReset = () => {
+    setSessionId(null);
+    setVideoSrc('');
+    setCurrentView('upload');
+    // Note: Active EventSource in ProcessingScreen will be closed by its cleanup effect
+  };
+
+  return (
+    <div className="App">
+      {currentView === 'upload' ? (
+        <UploadScreen onVideoUploaded={handleVideoUploaded} />
+      ) : (
+        <ProcessingScreen
+          sessionId={sessionId}
+          initialBufferSize={currentBufferSize}
+          videoSrcUrl={videoSrc}
+          onReset={handleReset}
+        />
+      )}
+    </div>
+  );
+}
+
+export default App;
