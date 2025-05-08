@@ -132,4 +132,4 @@ def process_video_stream_route(session_id):
 
 if __name__ == '__main__':
     print("Starting Flask server for Bank Surveillance Mock...")
-    app.run(debug=True, host='0.0.0.0', port=5001, threaded=True)
+    app.run(debug=True, host='0.0.0.0', port=16439, threaded=True)
