@@ -48,7 +48,7 @@ def generate_frames_and_detections(video_path, buffer_size_frames):
         yield f"event: error\ndata: {error_payload}\n\n"
         return
 
-    frame_buffer = deque(maxlen=buffer_size_frames)
+    frame_buffer = list()
     
     # Get video FPS to control streaming speed
     fps = cap.get(cv2.CAP_PROP_FPS)
@@ -82,7 +82,7 @@ def generate_frames_and_detections(video_path, buffer_size_frames):
             if len(frame_buffer) == buffer_size_frames:
                 # print(f"Buffer full ({len(frame_buffer)} frames), predicting...")
                 # Pass a list copy of the deque to predict_from_buffer
-                predicted_class, confidence = predict_from_buffer(list(frame_buffer)) 
+                predicted_class, confidence = predict_from_buffer(frame_buffer) 
                 
                 if predicted_class is not None:
                     detection_payload = json.dumps({
@@ -94,7 +94,7 @@ def generate_frames_and_detections(video_path, buffer_size_frames):
                 
                 # Slide the window: remove the oldest frame to make space for the next one.
                 # This ensures continuous prediction on overlapping clips.
-                frame_buffer = frame_buffer[:0] 
+                frame_buffer = frame_buffer[:0]
             
             # Control streaming speed
             elapsed_time = time.time() - stream_loop_start_time
