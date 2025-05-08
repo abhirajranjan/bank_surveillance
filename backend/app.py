@@ -23,6 +23,25 @@ video_sessions = {}
 last_execution_time = 0
 COOLDOWN_PERIOD = 120  # 2 minutes in seconds
 
+def load_twilio_config(config_file='twilio_config.json'):
+    with open(config_file, 'r') as f:
+        config = json.load(f)
+    
+    # Extract Twilio credentials
+    twilio_config = config.get('twilio', {})
+    account_sid = twilio_config.get('account_sid')
+    auth_token = twilio_config.get('auth_token')
+    flow = twilio_config.get('flow')
+    phone_to = twilio_config.get('phone_to')
+    phone_from = twilio_config.get('phone_from')
+    
+    if not account_sid or not auth_token:
+        raise ValueError("Missing Twilio credentials in config file")
+        
+    return [account_sid,auth_token,flow,phone_to,phone_from]
+    
+account_sid,auth_token,flow,phone_to,phone_from = load_twilio_config()
+
 def notify():
     global last_execution_time
     current_time = time.time()
@@ -34,18 +53,14 @@ def notify():
     # Update the last execution time
     last_execution_time = current_time
     
-    account_sid = 'AC4d68c684c0a6d3c9e4acd43eb700a28b'
-    auth_token = '77287aadb527258799a5db6a73b48ac1'
-    client = Client(account_sid, auth_token)
+    client = Client(account_sid,auth_token)
     
-    execution = client.studio.v2.flows(
-        "FW577bfe309d1484e6468bb754f2da72ab"
-    ).executions.create(to="+918178994426", from_="+19253321413")
+    execution = client.studio.v2.flows(flow).executions.create(to=phone_to, from_=phone_from)
     
     message = client.messages.create(
-        from_='+19253321413',
+        from_=phone_from,
         body='Alert! This is a security warning. Unauthorized activity has been detected in bank. A robbery is currently in progress. Please take immediate action and contact emergency services. Repeat: a robbery is in progress at bank',
-        to='+918178994426'
+        to=phone_to
     )
 
 @app.route('/upload', methods=['POST'])
