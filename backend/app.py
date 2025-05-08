@@ -7,6 +7,8 @@ import json
 import base64 # For encoding frames
 from collections import deque
 from model_loader import preprocess_frame, predict_from_buffer
+from twilio.rest import Client
+
 
 # Configuration
 UPLOAD_FOLDER = 'uploads'
@@ -16,7 +18,35 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 CORS(app)
 
-video_sessions = {} 
+video_sessions = {}
+
+last_execution_time = 0
+COOLDOWN_PERIOD = 120  # 2 minutes in seconds
+
+def notify():
+    global last_execution_time
+    current_time = time.time()
+    
+    # Check if cooldown period has elapsed since last execution
+    if current_time - last_execution_time <= COOLDOWN_PERIOD:
+        return
+    
+    # Update the last execution time
+    last_execution_time = current_time
+    
+    account_sid = 'AC4d68c684c0a6d3c9e4acd43eb700a28b'
+    auth_token = '77287aadb527258799a5db6a73b48ac1'
+    client = Client(account_sid, auth_token)
+    
+    execution = client.studio.v2.flows(
+        "FW577bfe309d1484e6468bb754f2da72ab"
+    ).executions.create(to="+918178994426", from_="+19253321413")
+    
+    message = client.messages.create(
+        from_='+19253321413',
+        body='Alert! This is a security warning. Unauthorized activity has been detected in bank. A robbery is currently in progress. Please take immediate action and contact emergency services. Repeat: a robbery is in progress at bank',
+        to='+918178994426'
+    )
 
 @app.route('/upload', methods=['POST'])
 def upload_video():
@@ -54,7 +84,6 @@ def generate_frames_and_detections(video_path, buffer_size_frames):
     fps = cap.get(cv2.CAP_PROP_FPS)
     frame_delay = 1.0 / fps if fps > 0 else 0.033  # Default to ~30 FPS if unknown
 
-    frame_count = 0
     print(f"Starting synchronized stream for {video_path} with buffer_size {buffer_size_frames}, FPS: {fps:.2f}")
     try:
         while cap.isOpened():
@@ -70,9 +99,6 @@ def generate_frames_and_detections(video_path, buffer_size_frames):
             frame_payload = json.dumps({"image_data": jpg_as_text})
             yield f"event: frame_update\ndata: {frame_payload}\n\n"
 
-            print(f"sent frame {frame_count}")
-            frame_count += 1
-
             # 2. Preprocess and add to internal buffer for model
             # preprocess_frame expects BGR, cv2.read provides BGR
             processed_model_frame = preprocess_frame(frame.copy()) # Use a copy for preprocessing
@@ -82,7 +108,10 @@ def generate_frames_and_detections(video_path, buffer_size_frames):
             if len(frame_buffer) == buffer_size_frames:
                 # print(f"Buffer full ({len(frame_buffer)} frames), predicting...")
                 # Pass a list copy of the deque to predict_from_buffer
-                predicted_class, confidence = predict_from_buffer(frame_buffer) 
+                predicted_class, confidence = predict_from_buffer(frame_buffer)
+
+                if confidence >= 75:
+                    notify()
                 
                 if predicted_class is not None:
                     detection_payload = json.dumps({
