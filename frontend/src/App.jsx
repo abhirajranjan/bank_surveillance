@@ -1,26 +1,27 @@
 import React, { useState } from 'react';
-import './App.css'; // Or index.css if you put Tailwind directives there
+import './App.css'; 
 import UploadScreen from './components/UploadScreen';
 import ProcessingScreen from './components/ProcessingScreen';
 
 function App() {
-  const [currentView, setCurrentView] = useState('upload'); // 'upload' or 'processing'
+  const [currentView, setCurrentView] = useState('upload');
   const [sessionId, setSessionId] = useState(null);
   const [currentBufferSize, setCurrentBufferSize] = useState(32);
-  const [videoSrc, setVideoSrc] = useState('');
+  // videoSrc is no longer needed to be passed to ProcessingScreen this way
+  // const [videoSrc, setVideoSrc] = useState(''); 
 
-  const handleVideoUploaded = (newSessionId, bufferSize, videoUrl) => {
+  const handleVideoUploaded = (newSessionId, bufferSize /*, videoUrl was here */) => {
     setSessionId(newSessionId);
     setCurrentBufferSize(bufferSize);
-    setVideoSrc(videoUrl); // URL for the <video> tag
+    // setVideoSrc(videoUrl); // Not needed for the new ProcessingScreen
     setCurrentView('processing');
   };
 
   const handleReset = () => {
     setSessionId(null);
-    setVideoSrc('');
+    // setVideoSrc(''); // Not needed
     setCurrentView('upload');
-    // Note: Active EventSource in ProcessingScreen will be closed by its cleanup effect
+    // EventSource in ProcessingScreen will be closed by its useEffect cleanup
   };
 
   return (
@@ -31,7 +32,7 @@ function App() {
         <ProcessingScreen
           sessionId={sessionId}
           initialBufferSize={currentBufferSize}
-          videoSrcUrl={videoSrc}
+          // videoSrcUrl={videoSrc} // No longer passing this
           onReset={handleReset}
         />
       )}
