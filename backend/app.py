@@ -128,10 +128,10 @@ def generate_frames_and_detections(video_path, buffer_size_frames):
                 frame_buffer = frame_buffer[:0]
             
             # Control streaming speed
-            # elapsed_time = time.time() - stream_loop_start_time
-            # sleep_time = frame_delay - elapsed_time
-            # if sleep_time > 0:
-            #     time.sleep(sleep_time)
+            elapsed_time = time.time() - stream_loop_start_time
+            sleep_time = frame_delay - elapsed_time
+            if sleep_time > 0:
+                time.sleep(sleep_time)
         
     except Exception as e:
         print(f"Error during streaming: {e}")
