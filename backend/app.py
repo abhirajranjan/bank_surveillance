@@ -46,7 +46,6 @@ def notify():
     current_time = time.time()
     
     if current_time - last_execution_time <= COOLDOWN_PERIOD:
-        print("cooldown period")
         return
     
     last_execution_time = current_time
@@ -59,7 +58,7 @@ def notify():
         to=phone_to
     )
 
-    print(message)
+    print(message, execution.id)
 
 @app.route('/upload', methods=['POST'])
 def upload_video():
