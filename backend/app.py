@@ -46,6 +46,7 @@ def notify():
     current_time = time.time()
     
     if current_time - last_execution_time <= COOLDOWN_PERIOD:
+        print("cooldown period")
         return
     
     last_execution_time = current_time
@@ -57,6 +58,8 @@ def notify():
         body='Alert! This is a security warning. Unauthorized activity has been detected in bank. A robbery is currently in progress. Please take immediate action and contact emergency services. Repeat: a robbery is in progress at bank',
         to=phone_to
     )
+
+    print(message)
 
 @app.route('/upload', methods=['POST'])
 def upload_video():
