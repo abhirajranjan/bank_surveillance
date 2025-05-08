@@ -94,7 +94,7 @@ def generate_frames_and_detections(video_path, buffer_size_frames):
                 
                 # Slide the window: remove the oldest frame to make space for the next one.
                 # This ensures continuous prediction on overlapping clips.
-                frame_buffer.popleft() 
+                frame_buffer = frame_buffer[:0] 
             
             # Control streaming speed
             elapsed_time = time.time() - stream_loop_start_time
