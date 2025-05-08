@@ -9,14 +9,14 @@ function ProcessingScreen({ sessionId, initialBufferSize, onReset }) {
   const eventSourceRef = useRef(null);
 
   useEffect(() => {
-    if (!sessionId || !initialBufferSize) return;
+    if (!sessionId) return;
 
     setDetection({ className: 'Initializing stream...', confidence: 0 }); 
     setCurrentFrameData(null);
     setStreamError('');
     setIsStreamEnded(false);
 
-    const streamUrl = `https://zvuwzqzix3g0qd-16439.proxy.runpod.net/process_video_stream/${sessionId}?buffer_size=${initialBufferSize}`;
+    const streamUrl = `https://zvuwzqzix3g0qd-16439.proxy.runpod.net/process_video_stream/${sessionId}?buffer_size=16`;
     eventSourceRef.current = new EventSource(streamUrl);
 
     eventSourceRef.current.addEventListener('frame_update', (event) => {

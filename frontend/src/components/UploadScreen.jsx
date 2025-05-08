@@ -61,7 +61,7 @@ function BankSurveillance({ onVideoUploaded }) {
 
       const data = await response.json();
       if (onVideoUploaded) {
-        onVideoUploaded(data.session_id, bufferSize, `https://zvuwzqzix3g0qd-16439.proxy.runpod.net/${data.video_url}?buffer_size=${bufferSize}`);
+        onVideoUploaded(data.session_id, bufferSize, `https://zvuwzqzix3g0qd-16439.proxy.runpod.net/${data.video_url}?buffer_size=16`);
       }
     } catch (err) {
       console.error("Upload error:", err);
@@ -119,11 +119,11 @@ function BankSurveillance({ onVideoUploaded }) {
 
           {/* Configuration Section */}
           <div className="space-y-6 pt-4">
-            <h3 className="text-lg font-medium">Detection Configuration</h3>
+            {/* <h3 className="text-lg font-medium">Detection Configuration</h3> */}
 
             <div className="space-y-8">
               {/* Confidence Percentage Slider */}
-              <div className="space-y-3">
+              {/* <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <label htmlFor="confidence" className="text-sm font-medium">
                     Confidence Threshold
@@ -141,10 +141,10 @@ function BankSurveillance({ onVideoUploaded }) {
                 <p className="text-xs text-gray-500">
                   Higher values reduce false positives but may miss subtle threats
                 </p>
-              </div>
+              </div> */}
 
               {/* Buffer Size Slider */}
-              <div className="space-y-3">
+              {/* <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <label htmlFor="buffer" className="text-sm font-medium">
                     Buffer Size
@@ -164,13 +164,13 @@ function BankSurveillance({ onVideoUploaded }) {
                   Larger buffer improves detection accuracy but requires more processing power
                 </p>
               </div>
-            </div>
+            </div> */}
           </div>
 
           <div className="bg-amber-50 border border-amber-200 rounded-md p-3 flex items-start space-x-3">
             <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5" />
             <p className="text-sm text-amber-800">
-              This system processes video footage to detect potential security threats. Results should be verified by security personnel.
+              This system processes video footage mocking realtime cctv camera feed to detect potential security threats.
             </p>
           </div>
         </CardContent>
