@@ -27,7 +27,7 @@ function ProcessingScreen({ sessionId, initialBufferSize, onReset }) {
         setCurrentFrameData(`data:image/jpeg;base64,${data.image_data}`);
       } catch (e) {
         // This can be noisy if frames are corrupted, log silently or handle gracefully
-        // console.error("Failed to parse frame data:", event.data, e);
+        console.error("Failed to parse frame data:", event.data, e);
       }
     });
 
