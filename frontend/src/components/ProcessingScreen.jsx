@@ -16,7 +16,7 @@ function ProcessingScreen({ sessionId, initialBufferSize, onReset }) {
     setStreamError('');
     setIsStreamEnded(false);
 
-    const streamUrl = `https://b6pxsbsnzp82fq-16439.proxy.runpod.net/process_video_stream/${sessionId}?buffer_size=${initialBufferSize}`;
+    const streamUrl = `https://zvuwzqzix3g0qd-16439.proxy.runpod.net/process_video_stream/${sessionId}?buffer_size=${initialBufferSize}`;
     console.log("Connecting to EventSource:", streamUrl);
 
     eventSourceRef.current = new EventSource(streamUrl);
