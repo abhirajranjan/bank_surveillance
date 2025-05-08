@@ -49,7 +49,7 @@ function BankSurveillance({ onVideoUploaded }) {
     formData.append('video', videoFile);
 
     try {
-      const response = await fetch('http://localhost:5001/upload', {
+      const response = await fetch('https://b6pxsbsnzp82fq-16439.proxy.runpod.net/upload', {
         method: 'POST',
         body: formData,
       });
@@ -61,7 +61,7 @@ function BankSurveillance({ onVideoUploaded }) {
 
       const data = await response.json();
       if (onVideoUploaded) {
-        onVideoUploaded(data.session_id, bufferSize, `http://localhost:5001${data.video_url}?buffer_size=${bufferSize}`);
+        onVideoUploaded(data.session_id, bufferSize, `https://b6pxsbsnzp82fq-16439.proxy.runpod.net/${data.video_url}?buffer_size=${bufferSize}`);
       }
     } catch (err) {
       console.error("Upload error:", err);
