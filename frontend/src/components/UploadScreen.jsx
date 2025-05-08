@@ -1,15 +1,19 @@
 import React, { useState, useRef } from 'react';
+import { Loader2, UploadCloud } from 'lucide-react';
 
 function UploadScreen({ onVideoUploaded }) {
   const [videoFile, setVideoFile] = useState(null);
-  const [bufferSize, setBufferSize] = useState(32); // Default buffer size
+  const [bufferSize, setBufferSize] = useState(32);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const fileInputRef = useRef(null);
 
   const handleFileChange = (event) => {
-    setVideoFile(event.target.files[0]);
-    setError('');
+    const file = event.target.files[0];
+    if (file) {
+      setVideoFile(file);
+      setError('');
+    }
   };
 
   const handleUpload = async () => {
@@ -17,6 +21,7 @@ function UploadScreen({ onVideoUploaded }) {
       setError('Please select a video file.');
       return;
     }
+
     setIsLoading(true);
     setError('');
 
@@ -24,7 +29,6 @@ function UploadScreen({ onVideoUploaded }) {
     formData.append('video', videoFile);
 
     try {
-      // Make sure your Flask server is running on port 5001
       const response = await fetch('http://localhost:5001/upload', {
         method: 'POST',
         body: formData,
@@ -46,59 +50,73 @@ function UploadScreen({ onVideoUploaded }) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900 p-4">
-      <div className="bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center text-teal-400 mb-8">
-          Bank Surveillance Mock Detector
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-800 flex items-center justify-center p-6">
+      <div className="bg-gray-900 shadow-2xl rounded-3xl p-10 w-full max-w-xl text-white">
+        <h1 className="text-center text-4xl font-bold text-teal-400 mb-10">
+          🎥 Smart Surveillance Detector
         </h1>
-        
-        <div className="mb-6">
-          <label htmlFor="videoFile" className="block mb-2 text-sm font-medium text-gray-300">
-            Upload Video
-          </label>
-          <input
-            type="file"
-            id="videoFile"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            accept="video/*"
-            className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4
-                       file:rounded-full file:border-0 file:text-sm file:font-semibold
-                       file:bg-teal-500 file:text-white hover:file:bg-teal-600
-                       cursor-pointer"
-          />
-        </div>
 
-        <div className="mb-6">
-          <label htmlFor="bufferSize" className="block mb-2 text-sm font-medium text-gray-300">
-            Frame Buffer Size: <span className="font-semibold text-teal-400">{bufferSize}</span>
-          </label>
-          <input
-            type="range"
-            id="bufferSize"
-            min="8"
-            max="64" // I3D typically trained on 16, 32, or 64 frames
-            step="4" // Steps of 4 often make sense for video models
-            value={bufferSize}
-            onChange={(e) => setBufferSize(parseInt(e.target.value))}
-            className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-teal-500"
-          />
-           <div className="flex justify-between text-xs text-gray-400 mt-1">
-            <span>8</span>
-            <span>64</span>
+        <div className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Upload Video</label>
+            <div
+              className="border-2 border-dashed border-teal-500 p-4 rounded-xl bg-gray-800 cursor-pointer hover:bg-gray-700 transition"
+              onClick={() => fileInputRef.current.click()}
+            >
+              <div className="flex items-center gap-3">
+                <UploadCloud className="w-6 h-6 text-teal-400" />
+                <p className="text-sm text-gray-300">
+                  {videoFile ? videoFile.name : 'Click to select a video file'}
+                </p>
+              </div>
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="video/*"
+              onChange={handleFileChange}
+              className="hidden"
+            />
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Frame Buffer Size: <span className="text-teal-400 font-semibold">{bufferSize}</span>
+            </label>
+            <input
+              type="range"
+              min="8"
+              max="64"
+              step="4"
+              value={bufferSize}
+              onChange={(e) => setBufferSize(parseInt(e.target.value))}
+              className="w-full accent-teal-500"
+            />
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>8</span>
+              <span>64</span>
+            </div>
+          </div>
+
+          {error && <p className="text-red-500 text-sm">{error}</p>}
+
+          <button
+            onClick={handleUpload}
+            disabled={isLoading}
+            className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold
+                        ${isLoading ? 'bg-gray-600 cursor-not-allowed' : 'bg-teal-600 hover:bg-teal-700'} 
+                        transition-all`}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="animate-spin w-5 h-5" />
+                Uploading...
+              </>
+            ) : (
+              'Start Detection'
+            )}
+          </button>
         </div>
-
-        {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-
-        <button
-          onClick={handleUpload}
-          disabled={isLoading}
-          className={`w-full py-3 px-4 rounded-lg font-semibold text-white transition-colors
-                      ${isLoading ? 'bg-gray-600 cursor-not-allowed' : 'bg-teal-600 hover:bg-teal-700'}`}
-        >
-          {isLoading ? 'Processing...' : 'Start Detection'}
-        </button>
       </div>
     </div>
   );
