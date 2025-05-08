@@ -24,6 +24,7 @@ function ProcessingScreen({ sessionId, initialBufferSize, onReset }) {
     eventSourceRef.current.addEventListener('frame_update', (event) => {
       try {
         const data = JSON.parse(event.data);
+        console.log("recv frame")
         setCurrentFrameData(`data:image/jpeg;base64,${data.image_data}`);
       } catch (e) {
         // This can be noisy if frames are corrupted, log silently or handle gracefully

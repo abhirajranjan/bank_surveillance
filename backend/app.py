@@ -54,8 +54,8 @@ def generate_frames_and_detections(video_path, buffer_size_frames):
     fps = cap.get(cv2.CAP_PROP_FPS)
     frame_delay = 1.0 / fps if fps > 0 else 0.033  # Default to ~30 FPS if unknown
 
+    frame_count = 0
     print(f"Starting synchronized stream for {video_path} with buffer_size {buffer_size_frames}, FPS: {fps:.2f}")
-
     try:
         while cap.isOpened():
             stream_loop_start_time = time.time()
@@ -69,6 +69,9 @@ def generate_frames_and_detections(video_path, buffer_size_frames):
             jpg_as_text = base64.b64encode(jpeg_buffer).decode('utf-8')
             frame_payload = json.dumps({"image_data": jpg_as_text})
             yield f"event: frame_update\ndata: {frame_payload}\n\n"
+
+            print(f"sent frame {frame_count}")
+            frame_count += 1
 
             # 2. Preprocess and add to internal buffer for model
             # preprocess_frame expects BGR, cv2.read provides BGR

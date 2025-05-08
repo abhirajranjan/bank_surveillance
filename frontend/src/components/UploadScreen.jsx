@@ -61,7 +61,7 @@ function BankSurveillance({ onVideoUploaded }) {
 
       const data = await response.json();
       if (onVideoUploaded) {
-        onVideoUploaded(data.session_id, bufferSize, `http://localhost:5001${data.video_url}`);
+        onVideoUploaded(data.session_id, bufferSize, `http://localhost:5001${data.video_url}?buffer_size=${bufferSize}`);
       }
     } catch (err) {
       console.error("Upload error:", err);
