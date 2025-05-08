@@ -4,13 +4,12 @@ import os
 import cv2
 import time
 import json
-import base64 # For encoding frames
+import base64 
 from collections import deque
 from model_loader import preprocess_frame, predict_from_buffer
 from twilio.rest import Client
 
 
-# Configuration
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
@@ -46,15 +45,11 @@ def notify():
     global last_execution_time
     current_time = time.time()
     
-    # Check if cooldown period has elapsed since last execution
     if current_time - last_execution_time <= COOLDOWN_PERIOD:
         return
     
-    # Update the last execution time
     last_execution_time = current_time
-    
     client = Client(account_sid,auth_token)
-    
     execution = client.studio.v2.flows(flow).executions.create(to=phone_to, from_=phone_from)
     
     message = client.messages.create(
@@ -75,11 +70,9 @@ def upload_video():
         file.save(filename)
         session_id = "".join(c for c in file.filename if c.isalnum()) + str(int(time.time()))
         video_sessions[session_id] = {"filepath": filename, "buffer_size": 32} # Default
-        # We don't return video_url anymore as the frontend won't use a <video> tag src
         return jsonify({"message": "Video uploaded successfully", "session_id": session_id}), 200
     return jsonify({"error": "File upload failed"}), 500
 
-# This route might still be useful for debugging or other purposes, but not for main video display
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
@@ -108,21 +101,17 @@ def generate_frames_and_detections(video_path, buffer_size_frames):
                 print("End of video or cannot read frame.")
                 break
 
-            # 1. Send frame for display to frontend
-            _, jpeg_buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 100]) # Quality 70 for smaller size
+            _, jpeg_buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 100])
             jpg_as_text = base64.b64encode(jpeg_buffer).decode('utf-8')
             frame_payload = json.dumps({"image_data": jpg_as_text})
             yield f"event: frame_update\ndata: {frame_payload}\n\n"
 
-            # 2. Preprocess and add to internal buffer for model
-            # preprocess_frame expects BGR, cv2.read provides BGR
-            processed_model_frame = preprocess_frame(frame.copy()) # Use a copy for preprocessing
+            processed_model_frame = preprocess_frame(frame.copy()) 
             frame_buffer.append(processed_model_frame)
 
             # 3. If buffer is full, predict and send detection
             if len(frame_buffer) == buffer_size_frames:
                 # print(f"Buffer full ({len(frame_buffer)} frames), predicting...")
-                # Pass a list copy of the deque to predict_from_buffer
                 predicted_class, confidence = predict_from_buffer(frame_buffer)
 
                 if confidence >= 75:
@@ -136,15 +125,13 @@ def generate_frames_and_detections(video_path, buffer_size_frames):
                     yield f"event: detection_update\ndata: {detection_payload}\n\n"
                     # print(f"Sent detection: {predicted_class} - {confidence:.2f}")
                 
-                # Slide the window: remove the oldest frame to make space for the next one.
-                # This ensures continuous prediction on overlapping clips.
                 frame_buffer = frame_buffer[:0]
             
             # Control streaming speed
-            elapsed_time = time.time() - stream_loop_start_time
-            sleep_time = frame_delay - elapsed_time
-            if sleep_time > 0:
-                time.sleep(sleep_time)
+            # elapsed_time = time.time() - stream_loop_start_time
+            # sleep_time = frame_delay - elapsed_time
+            # if sleep_time > 0:
+            #     time.sleep(sleep_time)
         
     except Exception as e:
         print(f"Error during streaming: {e}")

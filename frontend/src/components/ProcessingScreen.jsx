@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Siren } from 'lucide-react';
 
 function ProcessingScreen({ sessionId, initialBufferSize, onReset }) {
-  const [currentFrameData, setCurrentFrameData] = useState(null); // For base64 image string
+  const [currentFrameData, setCurrentFrameData] = useState(null); 
   const [detection, setDetection] = useState({ className: 'Waiting for data...', confidence: 0 });
   const [streamError, setStreamError] = useState('');
   const [isStreamEnded, setIsStreamEnded] = useState(false);
@@ -11,7 +11,7 @@ function ProcessingScreen({ sessionId, initialBufferSize, onReset }) {
   useEffect(() => {
     if (!sessionId || !initialBufferSize) return;
 
-    setDetection({ className: 'Initializing stream...', confidence: 0 }); // Reset detection state
+    setDetection({ className: 'Initializing stream...', confidence: 0 }); 
     setCurrentFrameData(null);
     setStreamError('');
     setIsStreamEnded(false);
@@ -28,7 +28,6 @@ function ProcessingScreen({ sessionId, initialBufferSize, onReset }) {
         console.log("recv frame")
         setCurrentFrameData(`data:image/jpeg;base64,${data.image_data}`);
       } catch (e) {
-        // This can be noisy if frames are corrupted, log silently or handle gracefully
         console.error("Failed to parse frame data:", event.data, e);
       }
     });
@@ -40,9 +39,9 @@ function ProcessingScreen({ sessionId, initialBufferSize, onReset }) {
         // console.log("Received detection:", data);
         setDetection({
           className: data.class_name,
-          confidence: data.confidence * 100, // Convert to percentage
+          confidence: data.confidence * 100, 
         });
-        setStreamError(''); // Clear previous errors on successful data
+        setStreamError(''); 
       } catch (e) {
         console.error("Failed to parse detection data:", event.data, e);
         setStreamError('Error processing detection data.');
@@ -157,8 +156,7 @@ function ProcessingScreen({ sessionId, initialBufferSize, onReset }) {
           <h2 className="text-xl font-semibold text-grey-300 mb-2">Current Detection</h2>
           <p className="text-4xl font-bold text-teal-400 mb-1 truncate max-w-full px-2" title={detection.className}>
             {
-              confidenceValue >= 75 ? (<><Siren /> {detection.className}</>) :
-              confidenceValue < 40 ? "Neutral (No threat detected)" : detection.className
+              confidenceValue < 50 ? "Neutral" : detection.className
             }
           </p>
           <p className="text-lg text-gray-800 mb-4">

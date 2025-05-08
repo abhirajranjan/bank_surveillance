@@ -39,24 +39,19 @@ def load_model(repo_id="Ahmeddawood0001/i3d_ucf_finetuned", filename="i3d_ucf_fi
 MODEL = load_model()
 
 def preprocess_frame(frame):
-    """Prepares a single frame for the buffer (resizing, color conversion)."""
-    frame = cv2.resize(frame, (224, 224)) # I3D typical input size
+    frame = cv2.resize(frame, (224, 224)) # I3D image input size
     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     return frame # Return as uint8 numpy array
 
 def predict_from_buffer(frame_buffer_list):
-    """
-    Processes a list of frames from the buffer to make a prediction.
-    frame_buffer_list: A list of preprocessed (resized, RGB) frames (numpy arrays).
-    """
     if not frame_buffer_list:
         return None, None
 
     frames_np = np.array(frame_buffer_list) # Shape: (T, H, W, C)
     
     frames_tensor = torch.from_numpy(frames_np).float() / 255.0 # Normalize
-    frames_tensor = frames_tensor.permute(3, 0, 1, 2)  # (C, T, H, W)
-    frames_tensor = frames_tensor.unsqueeze(0).to(DEVICE)  # Add batch dim (B, C, T, H, W)
+    frames_tensor = frames_tensor.permute(3, 0, 1, 2) 
+    frames_tensor = frames_tensor.unsqueeze(0).to(DEVICE)
     
     with torch.no_grad():
         output = MODEL(frames_tensor)
