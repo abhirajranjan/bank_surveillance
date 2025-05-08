@@ -80,8 +80,7 @@ function BankSurveillance({ onVideoUploaded }) {
           </div>
           <CardTitle className="text-3xl font-bold">Bank Surveillance</CardTitle>
           <CardDescription className="text-lg">
-            Upload surveillance footage for analysis and threat detection. Adjust parameters to fine-tune detection
-            sensitivity.
+            This system processes video footage mocking realtime cctv camera feed to detect potential security threats.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -167,12 +166,12 @@ function BankSurveillance({ onVideoUploaded }) {
             </div> 
           </div>
 
-          <div className="bg-amber-50 border border-amber-200 rounded-md p-3 flex items-start space-x-3">
+          {/* <div className="bg-amber-50 border border-amber-200 rounded-md p-3 flex items-start space-x-3">
             <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5" />
             <p className="text-sm text-amber-800">
               This system processes video footage mocking realtime cctv camera feed to detect potential security threats.
             </p>
-          </div>
+          </div> */}
         </CardContent>
         <CardFooter>
           <Button 

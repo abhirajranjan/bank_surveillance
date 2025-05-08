@@ -58,7 +58,6 @@ def notify():
         to=phone_to
     )
 
-    print(message, execution.id)
 
 @app.route('/upload', methods=['POST'])
 def upload_video():
@@ -89,7 +88,8 @@ def generate_frames_and_detections(video_path, buffer_size_frames):
         return
 
     frame_buffer = list()
-    
+    skip_buffer = 2 
+
     # Get video FPS to control streaming speed
     fps = cap.get(cv2.CAP_PROP_FPS)
     frame_delay = 1.0 / fps if fps > 0 else 0.033  # Default to ~30 FPS if unknown
@@ -111,8 +111,14 @@ def generate_frames_and_detections(video_path, buffer_size_frames):
             processed_model_frame = preprocess_frame(frame.copy()) 
             frame_buffer.append(processed_model_frame)
 
-            # 3. If buffer is full, predict and send detection
+            # If buffer is full, predict and send detection
             if len(frame_buffer) == buffer_size_frames:
+                # skip first buffer full  
+                if skip_buffer != 0:
+                    skip_buffer -= 1
+                    frame_buffer = frame_buffer[:0]
+                    continue
+
                 # print(f"Buffer full ({len(frame_buffer)} frames), predicting...")
                 predicted_class, confidence = predict_from_buffer(frame_buffer)
 
