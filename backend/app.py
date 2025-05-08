@@ -117,7 +117,7 @@ def generate_frames_and_detections(video_path, buffer_size_frames):
                 # print(f"Buffer full ({len(frame_buffer)} frames), predicting...")
                 predicted_class, confidence = predict_from_buffer(frame_buffer)
 
-                if confidence >= 75:
+                if confidence >= 0.75:
                     notify()
                 
                 if predicted_class is not None:
