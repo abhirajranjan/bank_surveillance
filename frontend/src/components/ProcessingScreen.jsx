@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Siren } from 'lucide-react';
 
 function ProcessingScreen({ sessionId, initialBufferSize, onReset }) {
   const [currentFrameData, setCurrentFrameData] = useState(null); // For base64 image string
@@ -155,7 +156,10 @@ function ProcessingScreen({ sessionId, initialBufferSize, onReset }) {
         <div className={`flex flex-col justify-center items-center p-6 bg-gray-800 rounded-lg shadow-xl border-2 ${getBoxColor(confidenceValue)}`}>
           <h2 className="text-xl font-semibold text-grey-300 mb-2">Current Detection</h2>
           <p className="text-4xl font-bold text-teal-400 mb-1 truncate max-w-full px-2" title={detection.className}>
-            {confidenceValue<40 ? "Neutral (No threat detected)" : detection.className}
+            {
+              confidenceValue >= 75 ? (<><Siren /> {detection.className}</>) :
+              confidenceValue < 40 ? "Neutral (No threat detected)" : detection.className
+            }
           </p>
           <p className="text-lg text-gray-800 mb-4">
             Confidence: {confidenceValue.toFixed(2)}%
