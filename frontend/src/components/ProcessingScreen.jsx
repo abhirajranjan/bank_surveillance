@@ -110,7 +110,7 @@ function ProcessingScreen({ sessionId, initialBufferSize, onReset }) {
 
 
   const getBoxColor = (confidenceVal) => {
-    if (confidenceVal > 90) return 'border-red-500 bg-red-500 bg-opacity-20';
+    if (confidenceVal > 90) return 'border-red-600 bg-red-600 bg-opacity-20';
     if (confidenceVal > 60) return 'border-yellow-500 bg-yellow-500 bg-opacity-20';
     return 'border-gray-600';
   };
@@ -168,7 +168,7 @@ function ProcessingScreen({ sessionId, initialBufferSize, onReset }) {
             ></div>
           </div>
            <div className="text-xs text-gray-500 mt-3 space-y-1">
-             <p><span className="inline-block w-3 h-3 bg-teal-500 mr-1 rounded-sm"></span> Normal / Low (&lt;=60%)</p>
+             <p><span className="inline-block w-3 h-3 bg-green-500 mr-1 rounded-sm"></span> Normal / Low (&lt;=60%)</p>
              <p><span className="inline-block w-3 h-3 bg-yellow-500 mr-1 rounded-sm"></span> Medium (&gt;60%)</p>
              <p><span className="inline-block w-3 h-3 bg-red-500 mr-1 rounded-sm"></span> High (&gt;90%)</p>
            </div>
