@@ -163,8 +163,8 @@ function BankSurveillance({ onVideoUploaded }) {
                 <p className="text-xs text-gray-500">
                   Larger buffer improves detection accuracy but requires more processing power
                 </p>
-              </div>
-            </div> */}
+              </div> */}
+            </div> 
           </div>
 
           <div className="bg-amber-50 border border-amber-200 rounded-md p-3 flex items-start space-x-3">
